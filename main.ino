@@ -6,6 +6,7 @@ LiquidCrystal_I2C lcd1(0x3F,16,2);
 const int bzr = 3;
 const int p1Y = 13;
 const int p1N = 12;
+const 
 
 void setup() {
   pinMode(bzr, OUTPUT);
@@ -16,6 +17,7 @@ void setup() {
   lcd0.backlight();
   lcd1.init();
   lcd1.backlight();
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -29,5 +31,10 @@ void loop() {
   lcd1.setCursor(0, 1);
   lcd1.print("Player 1");
 
-  tone(bzr, 1000);
+  if (digitalRead(13)==HIGH) {
+    Serial.println("Hit");
+  }
+  if (digitalRead(12)==HIGH) {
+    Serial.println("Stand");
+  }
 }
