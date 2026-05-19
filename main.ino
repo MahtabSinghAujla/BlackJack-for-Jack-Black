@@ -15,7 +15,7 @@ class player {
     int bet=0;
     bool isStand=false;
     string address;
-    player (string a,string b,) {
+    player (string a,string b) {
       playerNum=a;
       address=b
     }
