@@ -2,6 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C lcd0(0x27,16,2);
+LiquidCrystal_I2C lcd1(0x3F,16,2);
 const int bzr = 3;
 const int p1Y = 13;
 const int p1N = 12;
@@ -14,12 +15,10 @@ class player {
     int handVal=0;
     int bet=0;
     bool isStand=false;
-    string address;
+    char content [2][16];
     player (string a,string b) {
       playerNum=a;
-      address=b
     }
-    LiquidCrystal_I2C lcd(address,16,2);
     int setBet () {
       
     }
