@@ -6,21 +6,28 @@ LiquidCrystal_I2C lcd1(0x3F,16,2);
 const int bzr = 3;
 const int p1Y = 13;
 const int p1N = 12;
+char deck[52] = ['A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K']
+bool isGameOn = false;
 
 class player {
   public:
-    int playerNum;
-    int bal=50;
+    unsigned int bal=50;
     char hand[14];
     int handVal=0;
-    int bet=0;
+    unsigned int bet=0;
     bool isStand=false;
     char content [2][16];
-    player (string a,string b) {
-      playerNum=a;
-    }
     int setBet () {
-      
+      unsigned long time=millis();
+      while (millis()<time) {
+        if (digitalRead(13)==HIGH) {
+          ++bet;
+        } else if (digitalRead(12)==HIGH) {
+          --bet;
+        }
+        delay(50);
+      }
+      return bet;
     }
 };
 
@@ -34,23 +41,13 @@ void setup() {
   lcd1.init();
   lcd1.backlight();
   Serial.begin(9600);
+  player p1;
 }
 
 void loop() {
-  lcd0.setCursor(0,0);
-  lcd0.print("This is");
-  lcd0.setCursor(0, 1);
-  lcd0.print("Dealer");
-
-  lcd1.setCursor(0,0);
-  lcd1.print("This is");
-  lcd1.setCursor(0, 1);
-  lcd1.print("Player 1");
-
-  if (digitalRead(13)==HIGH) {
-    Serial.println("Hit");
-  }
-  if (digitalRead(12)==HIGH) {
-    Serial.println("Stand");
+  if (isGameOn==false) {
+    p1.setBet()
+  } else if (isGameOn==true) {
+    
   }
 }
