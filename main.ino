@@ -11,27 +11,92 @@ bool isGameOn = false;
 
 class player {
   public:
+    bool isAce=false;
+    int whereAce;
     unsigned int bal=50;
+    int handIndex=0;
     char hand[14];
     int handVal=0;
     unsigned int bet=0;
     bool isStand=false;
     char content [2][16];
-    int setBet () {
-      unsigned long time=millis();
-      while (millis()<time) {
-        if (digitalRead(13)==HIGH) {
+    void setBet () {
+      if (digitalRead(13)==HIGH) {
           ++bet;
-        } else if (digitalRead(12)==HIGH) {
+          delay(50);
+      } else if (digitalRead(12)==HIGH) {
           --bet;
-        }
-        delay(50);
+          delay(50);
       }
-      return bet;
+    }
+    void hitStand () {
+      if (digitalRead(13)==HIGH) {
+        if (isStand==false) {
+          randIndex=random(52);
+          if (deck[randIndex]!='0') {
+            drawn=deck[randIndex];
+            hand[handIndex]=drawn;
+            deck[randIndex]='0';
+            if (isDigit(drawn)==true) {
+              handVal+=drawn-'0'
+            } else if (drawn=='K'||drawn=='Q'||drawn=='J') {
+              handVal+=10;
+            } else if (drawn=='A') {
+              handVal+=11;
+            }
+            handIndex++;
+          }
+          delay(1000);
+        }
+      } else if (digitalRead(12)==HIGH) {
+        isStand==true;
+      }
+      int a=0
+      for (char i : hand) {
+        if (i=='A') {
+          isAce=true;
+          whereAce=a;
+        }
+        a++
+      }
+    }
+    void dealerPlay () {
+      if (handVal<17) {
+        if (isStand==false) {
+          randIndex=random(52);
+          if (deck[randIndex]!='0') {
+            drawn=deck[randIndex];
+            hand[handIndex]=drawn;
+            deck[randIndex]='0';
+            if (isDigit(drawn)==true) {
+              handVal+=drawn-'0'
+            } else if (drawn=='K'||drawn=='Q'||drawn=='J') {
+              handVal+=10;
+            } else if (drawn=='A') {
+              handVal+=11;
+            }
+            handIndex++;
+          }
+          delay(1000);
+        }
+      } else if (handVal>=17) {
+        isStand==true;
+      }
+      for (char i : hand) {
+        if (i=='A') {
+          isAce=true;
+          whereAce=i;
+        }
+      }
+    }
+    void contentUpdate () {
+      for (a=0;a>
     }
 };
-
+player p1;
+player d;
 void setup() {
+  randomseed(41)
   pinMode(bzr, OUTPUT);
   pinMode(p1Y, INPUT);
   pinMode(p1N, INPUT);
@@ -41,13 +106,60 @@ void setup() {
   lcd1.init();
   lcd1.backlight();
   Serial.begin(9600);
-  player p1;
 }
 
 void loop() {
   if (isGameOn==false) {
-    p1.setBet()
+    unsigned long time=millis();
+      while (millis()<time) {
+        p1.setBet();
+      }
   } else if (isGameOn==true) {
-    
-  }
-}
+    if (p1.isStand==false) {
+      p1.hitStand();
+      if (p1.handVal==21) {
+        p1.bal+=p1.bet;
+        p1.bet=0;
+        isGameOn=false;
+      } else if (p1.handVal>21) {
+        if (p1.isAce==true) {
+          p1.hand[p1.whereAce]=1;
+          p1.handVal-=10;
+        } else if (p1.isAce==false) {
+          p1.bal-=p1.bet;
+          p1.bet=0;
+          isGameOn=false;
+        }
+      }
+    }//while p1 hit
+    if (p1.isStand==true) {
+      if (d.isStand==false) {
+        d.dealerPlay();
+        if (d.handVal>21) {
+          if (d.isAce==true) {
+            d.hand[d.whereAce]=1;
+            d.handVal-=10;
+          } else if (d.isAce==false) {
+            p1.bal+=p1.bet;
+            p1.bet=0;
+            isGameOn=false;
+          }
+        }
+      }//while d hit
+      if (d.isStand==true) {
+        if (d.handVal>p1.handVal) {
+          p1.bal-=p1.bet;
+          p1.bet=0;
+          isGameOn=false;
+        } else if (d.handVal<p1.handVal) {
+          p1.bal+=p1.bet;
+          p1.bet=0;
+          isGameOn=false;
+        } else if (d.handVal==p1.handVal) {
+          p1.bet=0;
+          isGameOn=false;
+        }
+      }
+    }//if p1 stand
+  }//isGameOn
+}//void loop
