@@ -6,7 +6,7 @@ LiquidCrystal_I2C lcd1(0x3F,16,2);
 const int bzr = 3;
 const int p1Y = 13;
 const int p1N = 12;
-char deck[52] = ['A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K']
+char deck[52] = {'A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K'};
 bool isGameOn = false;
 
 class player {
@@ -32,13 +32,13 @@ class player {
     void hitStand () {
       if (digitalRead(13)==HIGH) {
         if (isStand==false) {
-          randIndex=random(52);
+          char randIndex=random(52);
           if (deck[randIndex]!='0') {
-            drawn=deck[randIndex];
+            char drawn=deck[randIndex];
             hand[handIndex]=drawn;
             deck[randIndex]='0';
             if (isDigit(drawn)==true) {
-              handVal+=drawn-'0'
+              handVal+=drawn-'0';
             } else if (drawn=='K'||drawn=='Q'||drawn=='J') {
               handVal+=10;
             } else if (drawn=='A') {
@@ -51,25 +51,25 @@ class player {
       } else if (digitalRead(12)==HIGH) {
         isStand==true;
       }
-      int a=0
+      int a=0;
       for (char i : hand) {
         if (i=='A') {
           isAce=true;
           whereAce=a;
         }
-        a++
+        a++;
       }
     }
     void dealerPlay () {
       if (handVal<17) {
         if (isStand==false) {
-          randIndex=random(52);
+          char randIndex=random(52);
           if (deck[randIndex]!='0') {
-            drawn=deck[randIndex];
+            char drawn=deck[randIndex];
             hand[handIndex]=drawn;
             deck[randIndex]='0';
             if (isDigit(drawn)==true) {
-              handVal+=drawn-'0'
+              handVal+=drawn-'0';
             } else if (drawn=='K'||drawn=='Q'||drawn=='J') {
               handVal+=10;
             } else if (drawn=='A') {
@@ -90,15 +90,15 @@ class player {
       }
     }
     void contentUpdate () {
-      for (int a=0;a<16;i++) {
-        content[(a+1)%2][a]=hand[a]
+      for (int a=0;a<16;a++) {
+        content[(a+1)%2][a]=hand[a];
       }
     }
 };
 player p1;
 player d;
 void setup() {
-  randomseed(41)
+  randomSeed(41);
   pinMode(bzr, OUTPUT);
   pinMode(p1Y, INPUT);
   pinMode(p1N, INPUT);
@@ -111,6 +111,9 @@ void setup() {
 }
 
 void loop() {
+  d.contentUpdate();
+  p1.contentUpdate();
+  
   lcd0.setCursor(0,0);
   lcd0.print(d.content[0]);
   lcd0.setCursor(0,1);
