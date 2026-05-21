@@ -90,7 +90,9 @@ class player {
       }
     }
     void contentUpdate () {
-      for (a=0;a>
+      for (int a=0;a<16;i++) {
+        content[(a+1)%2][a]=hand[a]
+      }
     }
 };
 player p1;
@@ -109,6 +111,16 @@ void setup() {
 }
 
 void loop() {
+  lcd0.setCursor(0,0);
+  lcd0.print(d.content[0]);
+  lcd0.setCursor(0,1);
+  lcd0.print(d.content[1]);
+
+  lcd1.setCursor(0,0);
+  lcd1.print(p1.content[0]);
+  lcd1.setCursor(0,1);
+  lcd1.print(p1.content[1]);
+  
   if (isGameOn==false) {
     unsigned long time=millis();
       while (millis()<time) {
