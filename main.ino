@@ -31,11 +31,13 @@ class player {
     }
     void hitStand () {
       if (digitalRead(13)==HIGH) {
+        Serial.println('p1 hit');
         if (isStand==false) {
           char randIndex=random(52);
           if (deck[randIndex]!='0') {
             char drawn=deck[randIndex];
             hand[handIndex]=drawn;
+            Serial.println(drawn);
             deck[randIndex]='0';
             if (isDigit(drawn)==true) {
               handVal+=drawn-'0';
@@ -45,11 +47,13 @@ class player {
               handVal+=11;
             }
             handIndex++;
+            Serial.println(handVal)
           }
-          delay(1000);
+          delay(100);
         }
       } else if (digitalRead(12)==HIGH) {
         isStand==true;
+        Serial.println('p1 stand');
       }
       int a=0;
       for (char i : hand) {
@@ -82,11 +86,13 @@ class player {
       } else if (handVal>=17) {
         isStand==true;
       }
+      int a=0;
       for (char i : hand) {
         if (i=='A') {
           isAce=true;
-          whereAce=i;
+          whereAce=a;
         }
+        a++;
       }
     }
     void contentUpdate () {
@@ -98,7 +104,7 @@ class player {
 player p1;
 player d;
 void setup() {
-  randomSeed(41);
+  randomSeed(21);
   pinMode(bzr, OUTPUT);
   pinMode(p1Y, INPUT);
   pinMode(p1N, INPUT);
@@ -114,23 +120,32 @@ void loop() {
   d.contentUpdate();
   p1.contentUpdate();
   
-  lcd0.setCursor(0,0);
-  lcd0.print(d.content[0]);
-  lcd0.setCursor(0,1);
-  lcd0.print(d.content[1]);
+  for (int i=0;i<16;i++) {
+    lcd0.setCursor(0,0);
+    lcd0.print(d.content[0][i]);
+  }
+  for (int i=0;i<16;i++) {
+    lcd0.setCursor(0,1);
+    lcd0.print(d.content[1][i]);
+  }
 
-  lcd1.setCursor(0,0);
-  lcd1.print(p1.content[0]);
-  lcd1.setCursor(0,1);
-  lcd1.print(p1.content[1]);
+  for (int i=0;i<16;i++) {
+    lcd1.setCursor(0,0);
+    lcd1.print(p1.content[0][i]);
+  }
+  for (int i=0;i<16;i++) {
+    lcd1.setCursor(0,1);
+    lcd1.print(p1.content[1][i]);
+  }
   
   if (isGameOn==false) {
     unsigned long time=millis();
-      while (millis()<time) {
+      while (millis()<(time+1)) {
         p1.setBet();
+        isGameOn=true;
       }
   } else if (isGameOn==true) {
-    if (p1.isStand==false) {
+    while (p1.isStand==false) {
       p1.hitStand();
       if (p1.handVal==21) {
         p1.bal+=p1.bet;
