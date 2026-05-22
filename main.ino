@@ -1,15 +1,3 @@
-
-
-Skip to content
-Using ACT Education Directorate Mail with screen readers
-1 of 4,158
-(no subject)
-Inbox
-
-Mahtab AUJLA <9937010@schoolsnet.act.edu.au>
-12:00 (45 minutes ago)
-to me
-
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
@@ -25,9 +13,9 @@ class player {
   public:
     bool isAce=false;
     int whereAce;
-    unsigned int bal=50;
+    unsigned int bal=500;
     int handIndex=0;
-    char hand[14];
+    char hand[12];
     int handVal=0;
     unsigned int bet=0;
     bool isStand=false;
@@ -45,24 +33,25 @@ class player {
         Serial.println("p1 hit");
         if (isStand==false) {
           char randIndex=random(52);
-          if (deck[randIndex]!='0') {
-            char drawn=deck[randIndex];
-            hand[handIndex]=drawn;
-            deck[randIndex]='0';
-            if (isDigit(drawn)==true) {
-              handVal+=drawn-'0';
-            } else if (drawn=='K'||drawn=='Q'||drawn=='J'||drawn=='X') {
-              handVal+=10;
-            } else if (drawn=='A') {
-              handVal+=11;
-            }
-            handIndex++;
-            Serial.print(handVal);
+          while (deck[randIndex]=='0') {
+            randIndex=random(52);
           }
+          char drawn=deck[randIndex];
+          hand[handIndex]=drawn;
+          deck[randIndex]='0';
+          if (isDigit(drawn)==true) {
+            handVal+=drawn-'0';
+          } else if (drawn=='K'||drawn=='Q'||drawn=='J'||drawn=='X') {
+            handVal+=10;
+          } else if (drawn=='A') {
+            handVal+=11;
+          }
+          handIndex++;
+            Serial.print(handVal);
           delay(100);
         }
       } else if (digitalRead(12)==HIGH) {
-        isStand==true;
+        isStand=true;
         Serial.println("p1 stand");
       }
       int a=0;
@@ -78,23 +67,23 @@ class player {
       if (handVal<17) {
         if (isStand==false) {
           char randIndex=random(52);
-          if (deck[randIndex]!='0') {
-            char drawn=deck[randIndex];
-            hand[handIndex]=drawn;
-            deck[randIndex]='0';
-            if (isDigit(drawn)==true) {
-              handVal+=drawn-'0';
-            } else if (drawn=='K'||drawn=='Q'||drawn=='J') {
-              handVal+=10;
-            } else if (drawn=='A') {
-              handVal+=11;
-            }
-            handIndex++;
+          while (deck[randIndex]=='0') {
+            randIndex=random(52);
           }
-          delay(1000);
+          char drawn=deck[randIndex];
+          hand[handIndex]=drawn;
+          deck[randIndex]='0';
+          if (isDigit(drawn)==true) {
+            handVal+=drawn-'0';
+          } else if (drawn=='K'||drawn=='Q'||drawn=='J'||drawn=='X') {
+            handVal+=10;
+          } else if (drawn=='A') {
+            handVal+=11;
+          }
+          handIndex++;
         }
       } else if (handVal>=17) {
-        isStand==true;
+        isStand=true;
       }
       int a=0;
       for (char i : hand) {
@@ -106,21 +95,25 @@ class player {
       }
     }
     void clear () {
-      for (int i=0;i<14;i++) {
+      for (int i=0;i<12;i++) {
         hand[i]='0';
       }
       isAce=false;
-      whereAce=0
+      whereAce=0;
       handIndex=0;
       handVal=0;
       bet=0;
       isStand=false;
+      char deck2[52] = {'A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K'};
+      for (int i=0;i<52;i++) {
+        deck[i]=deck2[i];
+      }
     }
 };
 player p1;
 player d;
 void setup() {
-  randomSeed(3);
+  randomSeed(analogRead(0));
   pinMode(bzr, OUTPUT);
   pinMode(p1Y, INPUT);
   pinMode(p1N, INPUT);
@@ -134,29 +127,43 @@ void setup() {
 
 void loop() {
   Serial.println(isGameOn);
-  for (int i=0;i<14;i++) {
-    lcd0.setCursor(i,(i+1)%2);
-    lcd0.print(d.hand[i]);
-  }
-  for (int i=0;i<14;i++) {
-    lcd1.setCursor(i,(i+1)%2);
-    lcd1.print(p1.hand[i]);
-  }
 
   if (isGameOn==false) {
     unsigned long time=millis();
-      while (millis()<(time+3000)) {
+      while (millis()<(time+5000)) {
         p1.setBet();
-        isGameOn=true;
-        tone(bzr,1000);
+        lcd1.setCursor(0,0);
+        lcd1.print("Set your bet:");
+        lcd1.setCursor(14,0);
+        lcd1.print(p1.bet);
+        lcd1.setCursor(0,1);
+        lcd1.print("Balance:");
+        lcd1.setCursor(10,1);
+        lcd1.print(p1.bal);
       }
+    isGameOn=true;
   } else if (isGameOn==true) {
+    lcd0.clear();
+    lcd1.clear();
+    for (int i=0;i<12;i++) {
+      lcd0.setCursor(i,(i+1)%2);
+      lcd0.print(d.hand[i]);
+    }
+    for (int i=0;i<12;i++) {
+      lcd1.setCursor(i,(i+1)%2);
+      lcd1.print(p1.hand[i]);
+    }
+
     if (p1.isStand==false) {
       p1.hitStand();
       if (p1.handVal==21) {
         p1.bal+=p1.bet;
         p1.bet=0;
         p1.clear();
+        lcd1.clear();
+        lcd1.setCursor(0,0);
+        lcd1.print("You win");
+        delay(1000);
         isGameOn=false;
       } else if (p1.handVal>21) {
         if (p1.isAce==true) {
@@ -166,22 +173,30 @@ void loop() {
           p1.bal-=p1.bet;
           p1.bet=0;
           p1.clear();
+          lcd1.clear();
+          lcd1.setCursor(0,0);
+          lcd1.print("You lose");
+          delay(1000);
           isGameOn=false;
         }
       }
     }//while p1 hit
     if (p1.isStand==true) {
-      if (d.isStand==false) {
+      while (d.isStand==false) {
         d.dealerPlay();
         if (d.handVal>21) {
           if (d.isAce==true) {
-            d.hand[d.whereAce]=1;
+            d.hand[d.whereAce]='1';
             d.handVal-=10;
           } else if (d.isAce==false) {
             p1.bal+=p1.bet;
             p1.bet=0;
             p1.clear();
             d.clear();
+            lcd1.clear();
+            lcd1.setCursor(0,0);
+            lcd1.print("You win");
+            delay(1000);
             isGameOn=false;
           }
         }
@@ -192,17 +207,29 @@ void loop() {
           p1.bet=0;
           p1.clear();
           d.clear();
+          lcd1.clear();
+          lcd1.setCursor(0,0);
+          lcd1.print("You lose");
+          delay(1000);
           isGameOn=false;
         } else if (d.handVal<p1.handVal) {
           p1.bal+=p1.bet;
           p1.bet=0;
           p1.clear();
           d.clear();
+          lcd1.clear();
+          lcd1.setCursor(0,0);
+          lcd1.print("You win");
+          delay(1000);
           isGameOn=false;
         } else if (d.handVal==p1.handVal) {
           p1.bet=0;
           p1.clear();
           d.clear();
+          lcd1.clear();
+          lcd1.setCursor(0,0);
+          lcd1.print("A tie");
+          delay(1000);
           isGameOn=false;
         }
       }
