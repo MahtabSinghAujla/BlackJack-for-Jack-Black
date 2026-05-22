@@ -3,11 +3,14 @@
 
 LiquidCrystal_I2C lcd0(0x27,16,2);
 LiquidCrystal_I2C lcd1(0x3F,16,2);
-const int bzr = 3;
-const int p1Y = 13;
-const int p1N = 12;
+const int ncP = 11;
+const int nc1 = 13;
+const int nc2 = 12;
 char deck[52] = {'A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K'};
 bool isGameOn = false;
+int lastStateNC1;
+unsigned long lastButtonPress=0;
+int 
 
 class player {
   public:
@@ -20,16 +23,20 @@ class player {
     unsigned int bet=0;
     bool isStand=false;
     void setBet () {
-      if (digitalRead(13)==HIGH) {
+      lastStateNC1=digitalRead(nc1);
+      if (digitalRead(nc1)!=lastStateNC1 && digitalRead(nc1)==1) {
+        if (digitalRead(nc2)!=digitalRead(nc1)) {
           ++bet;
           delay(50);
-      } else if (digitalRead(12)==HIGH) {
+        } else {
           --bet;
           delay(50);
+        }
       }
     }
     void hitStand () {
-      if (digitalRead(13)==HIGH) {
+      lastStateNC1=digitalRead(nc1);
+      if (digitalRead(nc1)!=lastStateNC1 && digitalRead(nc1)==1) {
         Serial.println("p1 hit");
         if (isStand==false) {
           char randIndex=random(52);
@@ -50,9 +57,12 @@ class player {
             Serial.print(handVal);
           delay(100);
         }
-      } else if (digitalRead(12)==HIGH) {
-        isStand=true;
-        Serial.println("p1 stand");
+      } else if (digitalRead(ncP)==HIGH) {
+        if (millis()-lastButtonPress>50) {
+          isStand=true;
+          Serial.println("p1 stand");
+        }
+        lastButtonPress=millis();
       }
       int a=0;
       for (char i : hand) {
@@ -114,9 +124,9 @@ player p1;
 player d;
 void setup() {
   randomSeed(analogRead(0));
-  pinMode(bzr, OUTPUT);
-  pinMode(p1Y, INPUT);
-  pinMode(p1N, INPUT);
+  pinMode(nc1, INPUT);
+  pinMode(nc2, INPUT);
+  pinMode(ncP, INPUT_PULLUP);
 
   lcd0.init();
   lcd0.backlight();
