@@ -4,39 +4,43 @@
 LiquidCrystal_I2C lcd0(0x27,16,2);
 LiquidCrystal_I2C lcd1(0x3F,16,2);
 const int ncP = 11;
-const int nc1 = 13;
-const int nc2 = 12;
+const int nc1 = 12;
+const int nc2 = 13;
 char deck[52] = {'A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K','A','2','3','4','5','6','7','8','9','X','J','Q','K'};
 bool isGameOn = false;
-int lastStateNC1;
+int lastBetStateNC1;
+int lastHitStateNC1;
 unsigned long lastButtonPress=0;
-int 
+int currentStateNC1;
+
 
 class player {
   public:
     bool isAce=false;
     int whereAce;
-    unsigned int bal=500;
+    unsigned int bal=50;
     int handIndex=0;
     char hand[12];
     int handVal=0;
     unsigned int bet=0;
     bool isStand=false;
     void setBet () {
-      lastStateNC1=digitalRead(nc1);
-      if (digitalRead(nc1)!=lastStateNC1 && digitalRead(nc1)==1) {
-        if (digitalRead(nc2)!=digitalRead(nc1)) {
+      int currentBetStateNC1=digitalRead(nc1);
+      if (lastBetStateNC1==HIGH && currentBetStateNC1==LOW) {
+        if (digitalRead(nc2)==LOW) {
           ++bet;
-          delay(50);
         } else {
-          --bet;
-          delay(50);
+          if (bet>0) {
+            --bet;
+          }
         }
+        delay(50);
       }
+      lastBetStateNC1=currentBetStateNC1;
     }
     void hitStand () {
-      lastStateNC1=digitalRead(nc1);
-      if (digitalRead(nc1)!=lastStateNC1 && digitalRead(nc1)==1) {
+      currentStateNC1=digitalRead(nc1);
+      if (currentStateNC1!=lastHitStateNC1 && currentStateNC1==HIGH) {
         Serial.println("p1 hit");
         if (isStand==false) {
           char randIndex=random(52);
@@ -55,15 +59,16 @@ class player {
           }
           handIndex++;
             Serial.print(handVal);
-          delay(100);
+          delay(10);
         }
-      } else if (digitalRead(ncP)==HIGH) {
-        if (millis()-lastButtonPress>50) {
+      } else if (digitalRead(ncP)==LOW) {
+        if (millis()-lastButtonPress>100) {
           isStand=true;
           Serial.println("p1 stand");
+          lastButtonPress=millis();
         }
-        lastButtonPress=millis();
       }
+      lastHitStateNC1=currentStateNC1;
       int a=0;
       for (char i : hand) {
         if (i=='A') {
@@ -100,6 +105,7 @@ class player {
         if (i=='A') {
           isAce=true;
           whereAce=a;
+          break;
         }
         a++;
       }
@@ -124,8 +130,8 @@ player p1;
 player d;
 void setup() {
   randomSeed(analogRead(0));
-  pinMode(nc1, INPUT);
-  pinMode(nc2, INPUT);
+  pinMode(nc1, INPUT_PULLUP);
+  pinMode(nc2, INPUT_PULLUP);
   pinMode(ncP, INPUT_PULLUP);
 
   lcd0.init();
@@ -151,10 +157,9 @@ void loop() {
         lcd1.setCursor(10,1);
         lcd1.print(p1.bal);
       }
+    lcd1.clear();
     isGameOn=true;
   } else if (isGameOn==true) {
-    lcd0.clear();
-    lcd1.clear();
     for (int i=0;i<12;i++) {
       lcd0.setCursor(i,(i+1)%2);
       lcd0.print(d.hand[i]);
@@ -169,6 +174,7 @@ void loop() {
       if (p1.handVal==21) {
         p1.bal+=p1.bet;
         p1.bet=0;
+        delay(1000);
         p1.clear();
         lcd1.clear();
         lcd1.setCursor(0,0);
@@ -182,6 +188,7 @@ void loop() {
         } else if (p1.isAce==false) {
           p1.bal-=p1.bet;
           p1.bet=0;
+          delay(500);
           p1.clear();
           lcd1.clear();
           lcd1.setCursor(0,0);
@@ -192,7 +199,7 @@ void loop() {
       }
     }//while p1 hit
     if (p1.isStand==true) {
-      while (d.isStand==false) {
+      if (d.isStand==false) {
         d.dealerPlay();
         if (d.handVal>21) {
           if (d.isAce==true) {
@@ -201,6 +208,7 @@ void loop() {
           } else if (d.isAce==false) {
             p1.bal+=p1.bet;
             p1.bet=0;
+            delay(500);
             p1.clear();
             d.clear();
             lcd1.clear();
@@ -215,6 +223,7 @@ void loop() {
         if (d.handVal>p1.handVal) {
           p1.bal-=p1.bet;
           p1.bet=0;
+          delay(500);
           p1.clear();
           d.clear();
           lcd1.clear();
@@ -225,6 +234,7 @@ void loop() {
         } else if (d.handVal<p1.handVal) {
           p1.bal+=p1.bet;
           p1.bet=0;
+          delay(500);
           p1.clear();
           d.clear();
           lcd1.clear();
@@ -234,6 +244,7 @@ void loop() {
           isGameOn=false;
         } else if (d.handVal==p1.handVal) {
           p1.bet=0;
+          delay(500);
           p1.clear();
           d.clear();
           lcd1.clear();
